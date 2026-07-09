@@ -21,7 +21,7 @@ import {
   Code
 } from "lucide-react";
 
-export default function ProposalViewer({ theme = "dark" }: { theme?: "light" | "dark" }) {
+const ProposalViewer = React.memo(function ProposalViewer({ theme = "dark" }: { theme?: "light" | "dark" }) {
   const [activeSlide, setActiveSlide] = useState("exec");
 
   const slideCategories = [
@@ -835,4 +835,6 @@ Do NOT sound panicky. Maintain direct, objective command-center authority."`}
       </div>
     </div>
   );
-}
+});
+
+export default ProposalViewer;

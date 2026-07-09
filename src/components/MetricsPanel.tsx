@@ -12,7 +12,7 @@ interface MetricsPanelProps {
   theme?: "light" | "dark";
 }
 
-export default function MetricsPanel({
+const MetricsPanel = React.memo(function MetricsPanel({
   logs,
   onClearLogs,
   carbonSaved,
@@ -166,4 +166,6 @@ export default function MetricsPanel({
       </div>
     </div>
   );
-}
+});
+
+export default MetricsPanel;

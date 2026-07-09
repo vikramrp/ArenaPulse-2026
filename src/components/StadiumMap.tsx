@@ -9,7 +9,7 @@ interface StadiumMapProps {
   theme?: "light" | "dark";
 }
 
-export default function StadiumMap({
+const StadiumMap = React.memo(function StadiumMap({
   activeSectorId,
   onSelectSector,
   sectorStatuses,
@@ -280,4 +280,6 @@ export default function StadiumMap({
       </div>
     </div>
   );
-}
+});
+
+export default StadiumMap;

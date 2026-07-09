@@ -544,7 +544,7 @@ function PlayerCard({
   );
 }
 
-export default function MatchupDashboard({ theme = "dark" }: { theme?: "light" | "dark" }) {
+const MatchupDashboard = React.memo(function MatchupDashboard({ theme = "dark" }: { theme?: "light" | "dark" }) {
   const [selectedMatchupId, setSelectedMatchupId] = useState("fr-ma");
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationProgress, setSimulationProgress] = useState(0);
@@ -838,4 +838,6 @@ export default function MatchupDashboard({ theme = "dark" }: { theme?: "light" |
       </div>
     </div>
   );
-}
+});
+
+export default MatchupDashboard;

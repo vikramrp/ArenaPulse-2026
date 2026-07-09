@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   User,
   Users,
@@ -33,13 +33,14 @@ import StadiumMap from "./components/StadiumMap";
 import ProposalViewer from "./components/ProposalViewer";
 import MetricsPanel from "./components/MetricsPanel";
 import MatchupDashboard from "./components/MatchupDashboard";
+import CustomOverrideInput from "./components/CustomOverrideInput";
+import useSpeechSynthesis from "./hooks/useSpeechSynthesis";
 
 export default function App() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [activeTab, setActiveTab] = useState<"console" | "deck">("console");
   const [selectedModuleId, setSelectedModuleId] = useState<ModuleId>("fan");
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
-  const [customMessage, setCustomMessage] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([
@@ -73,18 +74,20 @@ export default function App() {
     PitchZone: "normal",
   });
 
-  // TTS playback state
-  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
-  const [usingGeminiTTS, setUsingGeminiTTS] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
+  // Speech synthesis custom hook
+  const {
+    isPlayingVoice,
+    usingGeminiTTS,
+    setUsingGeminiTTS,
+    apiError,
+    setApiError,
+    isSpeechAnalyzing,
+    handleToggleVoice,
+  } = useSpeechSynthesis(selectedModuleId, selectedScenario);
 
-  const activeModule = MODULES_DATA.find((m) => m.id === selectedModuleId)!;
-
-  // Stop reading if tab or scenario changes
-  useEffect(() => {
-    window.speechSynthesis?.cancel();
-    setIsPlayingVoice(false);
-  }, [selectedModuleId, selectedScenario]);
+  const activeModule = useMemo(() => {
+    return MODULES_DATA.find((m) => m.id === selectedModuleId)!;
+  }, [selectedModuleId]);
 
   // Map module category to appropriate map sector
   const getSectorIdForModule = (moduleId: ModuleId, scenarioId?: string): string => {
@@ -123,12 +126,12 @@ export default function App() {
   };
 
   // Select first scenario on module change
-  const handleSelectModule = (id: ModuleId) => {
+  const handleSelectModule = useCallback((id: ModuleId) => {
     setSelectedModuleId(id);
     const mod = MODULES_DATA.find((m) => m.id === id)!;
     setSelectedScenario(mod.scenarios[0]);
     setActiveSectorId(getSectorIdForModule(id, mod.scenarios[0].id));
-  };
+  }, []);
 
   // Local bomb-proof backup response if API key is missing or server fails
   const getFallbackAnalysis = (moduleId: ModuleId, scenarioTitle: string, userText?: string): AnalysisResult => {
@@ -268,8 +271,27 @@ export default function App() {
     };
   };
 
+  // Metrics adjuster helper
+  const adjustMetrics = useCallback((modId: ModuleId, status: "normal" | "warning" | "critical") => {
+    if (modId === "sustainability") {
+      setCarbonSaved((prev) => prev + 4.2);
+    }
+    if (modId === "crowd" || modId === "fan") {
+      setAverageWaitTime((prev) => Math.max(4, prev - 3));
+    }
+    if (modId === "operations" || modId === "volunteer") {
+      setStaffEfficiency((prev) => Math.min(98, prev + 5));
+    }
+    if (modId === "emergency") {
+      setEmergencyResponseTime((prev) => Math.max(65, prev - 45));
+    }
+    if (status === "critical") {
+      setEmergencyResponseTime((prev) => Math.max(70, prev - 15));
+    }
+  }, []);
+
   // Triggers the simulation (API backend with fallback)
-  const handleTriggerSimulation = async (scenario: Scenario) => {
+  const handleTriggerSimulation = useCallback(async (scenario: Scenario, customMsg?: string) => {
     setIsAnalyzing(true);
     setApiError(null);
     setSelectedScenario(scenario);
@@ -285,6 +307,8 @@ export default function App() {
       [targetSector]: predictedStatus,
     }));
 
+    const actualUserMsg = customMsg || "";
+
     try {
       // API Post
       const res = await fetch("/api/arena-pulse/analyze", {
@@ -293,7 +317,7 @@ export default function App() {
         body: JSON.stringify({
           moduleName: activeModule.name,
           scenario: scenario.description,
-          userMessage: customMessage,
+          userMessage: actualUserMsg,
         }),
       });
 
@@ -324,7 +348,7 @@ export default function App() {
       console.warn("API Error (expected if API key not present, using high-fidelity fallback):", err.message);
       
       // Load bomb-proof high-fidelity mock data!
-      const fallbackData = getFallbackAnalysis(selectedModuleId, scenario.title, customMessage);
+      const fallbackData = getFallbackAnalysis(selectedModuleId, scenario.title, actualUserMsg);
       setAnalysisResult(fallbackData);
 
       setLogs((prev) => [
@@ -343,96 +367,10 @@ export default function App() {
       adjustMetrics(selectedModuleId, fallbackData.status);
     } finally {
       setIsAnalyzing(false);
-      setCustomMessage("");
     }
-  };
+  }, [selectedModuleId, activeModule.name, adjustMetrics]);
 
-  // Speaks aloud the verbal announcement
-  const handleToggleVoice = async () => {
-    if (!analysisResult) return;
-
-    if (isPlayingVoice) {
-      window.speechSynthesis?.cancel();
-      setIsPlayingVoice(false);
-      return;
-    }
-
-    if (usingGeminiTTS) {
-      // Test Gemini Server-side TTS API
-      setIsAnalyzing(true);
-      try {
-        const res = await fetch("/api/arena-pulse/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: analysisResult.speechTranscript }),
-        });
-        
-        if (!res.ok) throw new Error("TTS endpoint failed. Defaulting to Web Speech.");
-        const data = await res.json();
-        
-        // Play base64 audio
-        const audioBytes = atob(data.audio);
-        const arrayBuffer = new ArrayBuffer(audioBytes.length);
-        const view = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < audioBytes.length; i++) {
-          view[i] = audioBytes.charCodeAt(i);
-        }
-        const blob = new Blob([arrayBuffer], { type: "audio/wav" });
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        
-        setIsPlayingVoice(true);
-        audio.play();
-        audio.onended = () => setIsPlayingVoice(false);
-      } catch (err: any) {
-        setApiError("Google AI TTS API requires a configure secret key. Falling back to high-fidelity native browser speech synthesis.");
-        speakNative(analysisResult.speechTranscript);
-      } finally {
-        setIsAnalyzing(false);
-      }
-    } else {
-      speakNative(analysisResult.speechTranscript);
-    }
-  };
-
-  const speakNative = (text: string) => {
-    window.speechSynthesis?.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    
-    // Try to get a professional english voice
-    const voices = window.speechSynthesis.getVoices();
-    const femaleVoice = voices.find(v => v.lang.startsWith("en") && v.name.includes("Google"));
-    if (femaleVoice) utterance.voice = femaleVoice;
-
-    utterance.onstart = () => setIsPlayingVoice(true);
-    utterance.onend = () => setIsPlayingVoice(false);
-    utterance.onerror = () => setIsPlayingVoice(false);
-
-    window.speechSynthesis.speak(utterance);
-  };
-
-  // Metrics adjuster helper
-  const adjustMetrics = (modId: ModuleId, status: "normal" | "warning" | "critical") => {
-    if (modId === "sustainability") {
-      setCarbonSaved((prev) => prev + 4.2);
-    }
-    if (modId === "crowd" || modId === "fan") {
-      setAverageWaitTime((prev) => Math.max(4, prev - 3));
-    }
-    if (modId === "operations" || modId === "volunteer") {
-      setStaffEfficiency((prev) => Math.min(98, prev + 5));
-    }
-    if (modId === "emergency") {
-      setEmergencyResponseTime((prev) => Math.max(65, prev - 45));
-    }
-    if (status === "critical") {
-      setEmergencyResponseTime((prev) => Math.max(70, prev - 15));
-    }
-  };
-
-  const handleClearLogs = () => {
+  const handleClearLogs = useCallback(() => {
     setLogs([]);
     setSectorStatuses({
       NorthStand: "normal",
@@ -448,7 +386,7 @@ export default function App() {
     setAverageWaitTime(18);
     setStaffEfficiency(74);
     setEmergencyResponseTime(240);
-  };
+  }, []);
 
   return (
     <div className={`min-h-screen flex flex-col font-sans relative overflow-hidden fifa-grid-bg transition-colors duration-300 ${
@@ -744,34 +682,11 @@ export default function App() {
                   </div>
 
                   {/* Optional Custom message Box */}
-                  <div className="border-t border-slate-900 pt-4 flex flex-col gap-2">
-                    <label htmlFor="custom-incident-input" className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
-                      Custom Incident Override
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="custom-incident-input"
-                        type="text"
-                        placeholder="Type customized commands or ask a question to this module..."
-                        value={customMessage}
-                        onChange={(e) => setCustomMessage(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-emerald-500/40 pr-10"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && selectedScenario) {
-                            handleTriggerSimulation(selectedScenario);
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={() => selectedScenario && handleTriggerSimulation(selectedScenario)}
-                        disabled={!selectedScenario || isAnalyzing}
-                        className="absolute right-2 top-2 p-1 text-slate-500 hover:text-emerald-400 disabled:opacity-30 transition-colors"
-                        aria-label="Submit custom override command"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                  <CustomOverrideInput
+                    selectedScenario={selectedScenario}
+                    isAnalyzing={isAnalyzing}
+                    onTriggerSimulation={(customMsg) => handleTriggerSimulation(selectedScenario!, customMsg)}
+                  />
                 </div>
               </div>
 
@@ -873,7 +788,7 @@ export default function App() {
                               <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> ANN_BROADCAST_TRANSCRIPT
                             </span>
                             <button
-                              onClick={handleToggleVoice}
+                              onClick={() => handleToggleVoice(analysisResult)}
                               className={`px-2.5 py-1 rounded text-[9px] font-mono flex items-center gap-1 font-bold tracking-widest uppercase transition-all ${
                                 isPlayingVoice
                                   ? "bg-red-500 text-slate-950 animate-pulse"

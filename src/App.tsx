@@ -456,6 +456,13 @@ export default function App() {
         ? "theme-light bg-slate-50 text-slate-800 selection:bg-emerald-500/10 selection:text-emerald-700"
         : "theme-dark bg-slate-950 text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-300"
     }`}>
+      {/* WCAG AA Skip to Main Content Link */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-emerald-500 focus:text-slate-950 focus:px-4 focus:py-2.5 focus:rounded-xl focus:font-black focus:tracking-wider focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00f5d4] transition-all"
+      >
+        Skip to main content
+      </a>
       {/* Background Glowing Host Nation Color Blobs for FIFA 2026 Vibe */}
       <div className="absolute top-10 left-1/4 w-[400px] h-[400px] bg-[#00f5d4]/5 rounded-full blur-[100px] pointer-events-none animate-pulse-slow" />
       <div className="absolute bottom-20 right-1/4 w-[500px] h-[500px] bg-[#f15bb5]/5 rounded-full blur-[120px] pointer-events-none animate-pulse-slow" style={{ animationDelay: '2s' }} />
@@ -557,6 +564,7 @@ export default function App() {
             }`}
             id="theme-toggle-btn"
             title={theme === "light" ? "Switch to High-Tech Dark Mode" : "Switch to Sports Bright Mode"}
+            aria-label={theme === "light" ? "Switch to High-Tech Dark Mode" : "Switch to Sports Bright Mode"}
           >
             {theme === "light" ? (
               <>
@@ -604,7 +612,7 @@ export default function App() {
       </header>
 
       {/* Main Body View */}
-      <main className="flex-1 px-6 py-6 max-w-7xl mx-auto w-full flex flex-col gap-6 relative z-10">
+      <main id="main-content" tabIndex={-1} className="flex-1 px-6 py-6 max-w-7xl mx-auto w-full flex flex-col gap-6 relative z-10 focus:outline-none">
         
         {activeTab === "console" ? (
           <>
@@ -737,11 +745,12 @@ export default function App() {
 
                   {/* Optional Custom message Box */}
                   <div className="border-t border-slate-900 pt-4 flex flex-col gap-2">
-                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
+                    <label htmlFor="custom-incident-input" className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
                       Custom Incident Override
                     </label>
                     <div className="relative">
                       <input
+                        id="custom-incident-input"
                         type="text"
                         placeholder="Type customized commands or ask a question to this module..."
                         value={customMessage}
@@ -757,6 +766,7 @@ export default function App() {
                         onClick={() => selectedScenario && handleTriggerSimulation(selectedScenario)}
                         disabled={!selectedScenario || isAnalyzing}
                         className="absolute right-2 top-2 p-1 text-slate-500 hover:text-emerald-400 disabled:opacity-30 transition-colors"
+                        aria-label="Submit custom override command"
                       >
                         <Send className="w-4 h-4" />
                       </button>
@@ -789,6 +799,12 @@ export default function App() {
                           {usingGeminiTTS ? "ON" : "OFF"}
                         </button>
                       </div>
+                    </div>
+
+                    {/* ARIA Live region for Screen Readers to announce analysis status */}
+                    <div className="sr-only" role="status" aria-live="polite">
+                      {isAnalyzing ? "ArenaPulse AI is currently analyzing the active stadium incident..." : ""}
+                      {!isAnalyzing && analysisResult ? `Analysis complete. Severity rating is ${analysisResult.status}. Recommended actions ready.` : ""}
                     </div>
 
                     {isAnalyzing ? (

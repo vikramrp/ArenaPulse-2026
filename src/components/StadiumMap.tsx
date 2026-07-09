@@ -82,16 +82,34 @@ export default function StadiumMap({
         {/* Outer Plaza Loop (Parking & Transport access) */}
         <path
           d="M 50 150 A 150 110 0 1 1 350 150 A 150 110 0 1 1 50 150"
-          className={`${getStatusColor(sectorStatuses.PlazaZone || "normal", activeSectorId === "PlazaZone")} cursor-pointer transition-all duration-300 hover:opacity-80`}
+          className={`${getStatusColor(sectorStatuses.PlazaZone || "normal", activeSectorId === "PlazaZone")} cursor-pointer transition-all duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1`}
           onClick={() => onSelectSector("PlazaZone")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("PlazaZone");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`Outer Plaza & Parking. Status: ${sectorStatuses.PlazaZone || "normal"}. Click to inspect.`}
           id="sector-PlazaZone"
         />
 
         {/* Mid Stand Concourse Ring */}
         <path
           d="M 80 150 A 120 85 0 1 1 320 150 A 120 85 0 1 1 80 150"
-          className={`${getStatusColor(sectorStatuses.ConcourseLevel1 || "normal", activeSectorId === "ConcourseLevel1")} cursor-pointer transition-all duration-300 hover:opacity-80`}
+          className={`${getStatusColor(sectorStatuses.ConcourseLevel1 || "normal", activeSectorId === "ConcourseLevel1")} cursor-pointer transition-all duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1`}
           onClick={() => onSelectSector("ConcourseLevel1")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("ConcourseLevel1");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`Main Concourse Level 1. Status: ${sectorStatuses.ConcourseLevel1 || "normal"}. Click to inspect.`}
           id="sector-ConcourseLevel1"
         />
 
@@ -99,40 +117,85 @@ export default function StadiumMap({
         {/* North Stand */}
         <path
           d="M 100 135 A 100 70 0 0 1 300 135 L 280 150 A 80 50 0 0 0 120 150 Z"
-          className={`${getStatusColor(sectorStatuses.NorthStand || "normal", activeSectorId === "NorthStand")} cursor-pointer transition-all duration-300 hover:opacity-80`}
+          className={`${getStatusColor(sectorStatuses.NorthStand || "normal", activeSectorId === "NorthStand")} cursor-pointer transition-all duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1`}
           onClick={() => onSelectSector("NorthStand")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("NorthStand");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`North Stand (Gate A and B). Status: ${sectorStatuses.NorthStand || "normal"}. Click to inspect.`}
           id="sector-NorthStand"
         />
 
         {/* South Stand */}
         <path
           d="M 100 165 A 100 70 0 0 0 300 165 L 280 150 A 80 50 0 0 1 120 150 Z"
-          className={`${getStatusColor(sectorStatuses.SouthStand || "normal", activeSectorId === "SouthStand")} cursor-pointer transition-all duration-300 hover:opacity-80`}
+          className={`${getStatusColor(sectorStatuses.SouthStand || "normal", activeSectorId === "SouthStand")} cursor-pointer transition-all duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1`}
           onClick={() => onSelectSector("SouthStand")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("SouthStand");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`South Stand (Gate E and F). Status: ${sectorStatuses.SouthStand || "normal"}. Click to inspect.`}
           id="sector-SouthStand"
         />
 
         {/* West Stand (Left Side) */}
         <path
           d="M 100 135 A 100 70 0 0 0 100 165 L 120 150 A 80 50 0 0 1 120 150 Z"
-          className={`${getStatusColor(sectorStatuses.WestStand || "normal", activeSectorId === "WestStand")} cursor-pointer transition-all duration-300 hover:opacity-80`}
+          className={`${getStatusColor(sectorStatuses.WestStand || "normal", activeSectorId === "WestStand")} cursor-pointer transition-all duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1`}
           onClick={() => onSelectSector("WestStand")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("WestStand");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`West Stand (Gate G and H). Status: ${sectorStatuses.WestStand || "normal"}. Click to inspect.`}
           id="sector-WestStand"
         />
 
         {/* East Stand (Right Side) */}
         <path
           d="M 300 135 A 100 70 0 0 1 300 165 L 280 150 A 80 50 0 0 0 280 150 Z"
-          className={`${getStatusColor(sectorStatuses.EastStand || "normal", activeSectorId === "EastStand")} cursor-pointer transition-all duration-300 hover:opacity-80`}
+          className={`${getStatusColor(sectorStatuses.EastStand || "normal", activeSectorId === "EastStand")} cursor-pointer transition-all duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1`}
           onClick={() => onSelectSector("EastStand")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("EastStand");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`East Stand (Gate C and D). Status: ${sectorStatuses.EastStand || "normal"}. Click to inspect.`}
           id="sector-EastStand"
         />
 
         {/* Premium Suites & Level 2 */}
         <path
           d="M 130 150 A 70 42 0 1 1 270 150 A 70 42 0 1 1 130 150"
-          className={`${getStatusColor(sectorStatuses.SuitesLevel2 || "normal", activeSectorId === "SuitesLevel2")} cursor-pointer transition-all duration-300 hover:opacity-80`}
+          className={`${getStatusColor(sectorStatuses.SuitesLevel2 || "normal", activeSectorId === "SuitesLevel2")} cursor-pointer transition-all duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1`}
           onClick={() => onSelectSector("SuitesLevel2")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("SuitesLevel2");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`Premium Suites Level 2. Status: ${sectorStatuses.SuitesLevel2 || "normal"}. Click to inspect.`}
           id="sector-SuitesLevel2"
         />
 
@@ -142,8 +205,17 @@ export default function StadiumMap({
           cy="150"
           rx="55"
           ry="30"
-          className="fill-[url(#pitch-grad)] stroke-white/40 stroke-1 cursor-pointer hover:stroke-white/80 transition-all duration-300"
+          className="fill-[url(#pitch-grad)] stroke-white/40 stroke-1 cursor-pointer hover:stroke-white/80 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1"
           onClick={() => onSelectSector("PitchZone")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectSector("PitchZone");
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`Pitch and Player Areas. Status: ${sectorStatuses.PitchZone || "normal"}. Click to inspect.`}
           id="sector-PitchZone"
         />
         

@@ -1,0 +1,6 @@
+{
+  "name": "ArenaPulse AI",
+  "description": "The Intelligent AI Command Center for FIFA World Cup 2026 Stadium Operations, integrating fan navigation, crowd intelligence, transport, and emergency operations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
